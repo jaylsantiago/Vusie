@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#FFFFFF</color>
+    <color name="colorPrimaryDark">#f5f5f5</color>
+    <color name="colorSecondary">#000000</color>
+    <color name="topStoriesColorTheme">#0000b3</color>
+    <color name="techStoriesColorTheme">#00b300</color>
+    <color name="scienceStoriesColorTheme">#178c9c</color>
+    <color name="sportsStoriesColorTheme">#b30000</color>
+    <color name="businessStoriesColorTheme">#595959</color>
+    <color name="entertainmentStoriesColorTheme">#A617CF</color>
+</resources>
