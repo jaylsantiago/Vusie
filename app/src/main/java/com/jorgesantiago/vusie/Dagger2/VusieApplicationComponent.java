@@ -1,13 +1,35 @@
 package com.jorgesantiago.vusie.Dagger2;
 
-import com.jorgesantiago.vusie.RoomDB.ArticleRepository;
+import com.jorgesantiago.vusie.Application.VusieApplication;
 
+import javax.inject.Singleton;
+
+import dagger.BindsInstance;
 import dagger.Component;
+import dagger.android.AndroidInjector;
+import dagger.android.support.AndroidSupportInjectionModule;
 
-@VusieApplicationScope
-@Component(modules = RoomDatabaseModule.class)
-public interface VusieApplicationComponent {
+/**
+ * Our top level component in our dependency graph. This component has access to all the modules and subcomponents we need in order
+ * to provide us the dependencies we need when we ask for them.
+ */
+@Singleton
+@Component(modules = {
+        AndroidSupportInjectionModule.class,
+        DataModule.class, // this module includes ApiModule(includes NetworkModule), so no need to explicitly list them here
+        BuildersModule.class
+})
+public interface VusieApplicationComponent extends AndroidInjector<VusieApplication> {
 
-    ArticleRepository getArticleRepository();
+    @Override
+    void inject(VusieApplication application);
 
+    @Component.Builder
+    interface Builder {
+
+        @BindsInstance
+        Builder application(VusieApplication application);
+
+        VusieApplicationComponent build();
+    }
 }

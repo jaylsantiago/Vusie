@@ -1,7 +1,6 @@
-package com.jorgesantiago.vusie;
+package com.jorgesantiago.vusie.UI;
 
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,11 +9,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.jorgesantiago.vusie.NewsAPI.NewsCategory;
+import com.jorgesantiago.vusie.R;
 import com.jorgesantiago.vusie.RoomDB.ArticleDatabaseEntity;
+import com.jorgesantiago.vusie.Utilities.ArticleUtility;
+import com.jorgesantiago.vusie.Utilities.DisplayUtility;
 import com.squareup.picasso.Picasso;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.List;
 
 import androidx.core.content.ContextCompat;
@@ -26,7 +26,6 @@ import xyz.klinker.android.article.ArticleUtils;
 /**
  * Simple adapter that populates and recycles our UI cards containing different news articles for the user to browse through
  */
-
 class ArticleCardContentAdapter extends FeatureRecyclerViewAdapter {
 
     private static final int ITEM_TYPE_ARTICLE = 0;
@@ -43,10 +42,10 @@ class ArticleCardContentAdapter extends FeatureRecyclerViewAdapter {
     public RecyclerView.ViewHolder onCreateFeaturedViewHolder(ViewGroup viewGroup, int viewType) {
         switch (viewType) {
             case ITEM_TYPE_ARTICLE:
-                return new ArticleContentViewHolder(LayoutInflater.from(viewGroup.getContext()), viewGroup);
+                return new ArticleContentViewHolder(LayoutInflater.from(context), viewGroup);
             case ITEM_TYPE_DUMMY:
             default:
-                return new DummyViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.layout_dummy_item, viewGroup, false));
+                return new DummyViewHolder(LayoutInflater.from(context).inflate(R.layout.layout_dummy_item, viewGroup, false));
         }
     }
 
@@ -55,6 +54,7 @@ class ArticleCardContentAdapter extends FeatureRecyclerViewAdapter {
         if (viewHolder instanceof ArticleContentViewHolder) {
             final ArticleContentViewHolder articleCardViewHolder = ArticleContentViewHolder.class.cast(viewHolder);
             ArticleDatabaseEntity article = newsArticles.get(position);
+            //TODO hide API key?
             ArticleUtils utils = new ArticleUtils("ab629f3fdd29eb3c05da832fc1760b18");
             utils.preloadArticle(context, article.getUrl(), null);
             articleCardViewHolder.updateCardContents(article);
@@ -65,7 +65,8 @@ class ArticleCardContentAdapter extends FeatureRecyclerViewAdapter {
 
     @Override
     public int getFeaturedItemsCount() {
-        return newsArticles == null ? 0 : newsArticles.size() + 2; // need to add 2 dummy layouts to get last 2 items of recycler view to scroll
+        // need to add 2 dummy layouts to get last 2 items of recycler view to scroll
+        return newsArticles == null ? 0 : newsArticles.size() + 2;
     }
 
     @Override
@@ -85,6 +86,7 @@ class ArticleCardContentAdapter extends FeatureRecyclerViewAdapter {
 
     /**
      * This gets called from within a {@link androidx.lifecycle.LiveData}'s observe callback, to notify the UI to update when our database has been updated
+     * with more articles
      *
      * @param articles to be displayed in the adapter
      */
@@ -108,6 +110,7 @@ class ArticleCardContentAdapter extends FeatureRecyclerViewAdapter {
         private TextView articleTitle;
         private TextView articleDescription;
         private Button readMoreButton;
+        private Picasso picasso;
 
         private ArticleContentViewHolder(LayoutInflater inflater, ViewGroup parent) {
             super(inflater.inflate(R.layout.article_card_layout, parent, false));
@@ -118,49 +121,49 @@ class ArticleCardContentAdapter extends FeatureRecyclerViewAdapter {
             articleTitle = itemView.findViewById(R.id.articleTitle);
             articleDescription = itemView.findViewById(R.id.articleDescription);
             readMoreButton = itemView.findViewById(R.id.readMoreButton);
+            picasso = Picasso.get();
         }
 
         private void updateCardContents(final ArticleDatabaseEntity article) {
 
+            // category reference for the current article being displayed
             NewsCategory category = NewsCategory.values()[article.getArticleCategory()];
 
-            // we load our images in real time instead of dealing with the additional database or FileManager over head of saving these images locally
-            // Picasso is extremely efficient and fast in loading images in real time for the user to see, tradeoffs seemed worth it for this simple app
-            Picasso.get()
-                    // tell picasso where to find the image we want
-                    .load(article.getUrlToImage())
-                    // resize the image, this helps with device memory -- height of 0 tells picasso to respect original image aspect ratio
-                    .resize(1500, 0)
+            // load our Article image
+            picasso.load(article.getUrlToImage())
+                    // resize the image to a little bit larger than the screen width,
+                    // this helps with device memory while also displaying the highest quality image possible for the specific device's screen
+                    // height of 0 tells picasso to respect original image aspect ratio
+                    .resize((int) (DisplayUtility.getScreenWidthInPixels() * 1.25), 0)
+                    // only scale large photos down, do not scale smaller photos up, that will cause them to look distorted and makes the UI ugly
+                    .onlyScaleDown()
                     // fill our image view
                     .centerCrop()
                     // tell picasso to load the image right into our image view
                     .into(articlePicture);
 
-            String query = null;
-            try {
-                query = URLEncoder.encode(article.getSourceLogoUrl(), "utf-8");
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
+            // loading our source logo to be displayed
+            picasso.load(ArticleUtility.getSourceLogoUrl(article.getUrl()))
+                    .placeholder(category.getColorResource())
+                    .into(articleSourceLogo);
 
-            if (query != null) {
-                String sourceLogoUrl = "https://logo.clearbit.com/" + query;
-
-                Picasso.get().load(sourceLogoUrl).placeholder(category.getColorResource()).into(articleSourceLogo);
-            }
-
+            // set the article source text
             articleSource.setText(article.getSource());
 
+            // set the article title text
             articleTitle.setText(article.getTitle());
 
-            // not all articles from ApiInterface come with a description, we handle this to show something to the user instead of a blank area
+            // not all articles from NewsAPI come with a description
             if (article.getDescription() != null && !article.getDescription().isEmpty()) {
+                // if we have a description, set the description text
                 articleDescription.setText(article.getDescription());
             }
 
-            readMoreButton.getBackground().setTint(ContextCompat.getColor(readMoreButton.getContext(), category.getColorResource()));
+            // set the read more button background to match the color scheme of the current category
+            readMoreButton.getBackground().setTint(ContextCompat.getColor(context, category.getColorResource()));
 
             readMoreButton.setOnClickListener(view -> {
+                // we use the ArticleViewer API to display articles
                 ArticleIntent intent = new ArticleIntent.Builder(context, "ab629f3fdd29eb3c05da832fc1760b18")
                         .setTheme(ArticleIntent.THEME_LIGHT)
                         .build();

@@ -1,12 +1,12 @@
 package com.jorgesantiago.vusie.RoomDB;
 
+import java.util.List;
+
 import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
-
-import java.util.List;
 
 /**
  * {@link Dao} (data access object), we specify SQL queries and associate them with method calls.
@@ -18,42 +18,74 @@ import java.util.List;
 @Dao
 public interface ArticleDao {
 
+    /**
+     * Inserts an article into our Room DB
+     *
+     * @param article to be inserted
+     */
     // No SQL needed, @Insert is a convenience annotation, Room knows what to do
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(ArticleDatabaseEntity article);
 
+    /**
+     * Clears the database of all articles
+     */
     @Query("DELETE FROM article_table")
     void deleteAllArticle();
 
-    // 0 is the ordinal value for the enum GE
-    @Query("SELECT * FROM article_table ORDER BY publishedAt DESC")
-    LiveData<List<ArticleDatabaseEntity>> getAllNewsArticles();
-
-    // 0 is the ordinal value for the enum GENERAL
+    /**
+     * Queries the database for all articles that have an articleCategory of 0 (0 is the ordinal value for the enum GENERAL in {@link com.jorgesantiago.vusie.NewsAPI.NewsCategory})
+     *
+     * @return a LiveData object that contains a list of ArticleDatabaseEntity's that can be observed/subscribed for changes to the DB
+     */
     @Query("SELECT * FROM article_table WHERE articleCategory = 0")
     LiveData<List<ArticleDatabaseEntity>> getAllGeneralNewsArticles();
 
-    // 1 is the ordinal value for the enum ENTERTAINMENT
+    /**
+     * Queries the database for all articles that have an articleCategory of 1 (1 is the ordinal value for the enum ENTERTAINMENT in {@link com.jorgesantiago.vusie.NewsAPI.NewsCategory})
+     *
+     * @return a LiveData object that contains a list of ArticleDatabaseEntity's that can be observed/subscribed for changes to the DB
+     */
     @Query("SELECT * FROM article_table WHERE articleCategory = 1")
     LiveData<List<ArticleDatabaseEntity>> getAllEntertainmentNewsArticles();
 
-    // 2 is the ordinal value for the enum TECHNOLOGY
+    /**
+     * Queries the database for all articles that have an articleCategory of 2 (2 is the ordinal value for the enum TECHNOLOGY in {@link com.jorgesantiago.vusie.NewsAPI.NewsCategory})
+     *
+     * @return a LiveData object that contains a list of ArticleDatabaseEntity's that can be observed/subscribed for changes to the DB
+     */
     @Query("SELECT * FROM article_table WHERE articleCategory = 2")
     LiveData<List<ArticleDatabaseEntity>> getAllTechNewsArticles();
 
-    // 3 is the ordinal value for the enum SPORTS
+    /**
+     * Queries the database for all articles that have an articleCategory of 3 (3 is the ordinal value for the enum SPORTS in {@link com.jorgesantiago.vusie.NewsAPI.NewsCategory})
+     *
+     * @return a LiveData object that contains a list of ArticleDatabaseEntity's that can be observed/subscribed for changes to the DB
+     */
     @Query("SELECT * FROM article_table WHERE articleCategory = 3")
     LiveData<List<ArticleDatabaseEntity>> getAllSportsNewsArticles();
 
-    // 4 is the ordinal value for the enum BUSINESS
+    /**
+     * Queries the database for all articles that have an articleCategory of 4 (4 is the ordinal value for the enum BUSINESS in {@link com.jorgesantiago.vusie.NewsAPI.NewsCategory})
+     *
+     * @return a LiveData object that contains a list of ArticleDatabaseEntity's that can be observed/subscribed for changes to the DB
+     */
     @Query("SELECT * FROM article_table WHERE articleCategory = 4")
     LiveData<List<ArticleDatabaseEntity>> getAllBusinessNewsArticles();
 
-    // 5 is the ordinal value for the enum SCIENCE
+    /**
+     * Queries the database for all articles that have an articleCategory of 5 (5 is the ordinal value for the enum SCIENCE in {@link com.jorgesantiago.vusie.NewsAPI.NewsCategory})
+     *
+     * @return a LiveData object that contains a list of ArticleDatabaseEntity's that can be observed/subscribed for changes to the DB
+     */
     @Query("SELECT * FROM article_table WHERE articleCategory = 5")
     LiveData<List<ArticleDatabaseEntity>> getAllScienceNewsArticles();
 
-    // 6 is the ordinal value for the enum HEALTH
+    /**
+     * Queries the database for all articles that have an articleCategory of 6 (6 is the ordinal value for the enum HEALTH in {@link com.jorgesantiago.vusie.NewsAPI.NewsCategory})
+     *
+     * @return a LiveData object that contains a list of ArticleDatabaseEntity's that can be observed/subscribed for changes to the DB
+     */
     @Query("SELECT * FROM article_table WHERE articleCategory = 6")
     LiveData<List<ArticleDatabaseEntity>> getAllHealthNewsArticles();
 }

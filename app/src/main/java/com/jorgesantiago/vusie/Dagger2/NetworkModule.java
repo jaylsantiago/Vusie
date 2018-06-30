@@ -1,15 +1,24 @@
 package com.jorgesantiago.vusie.Dagger2;
 
+import java.util.concurrent.TimeUnit;
+
+import javax.inject.Singleton;
+
 import dagger.Module;
 import dagger.Provides;
 import okhttp3.OkHttpClient;
 
+/**
+ * Module for our Dagger Graph that provides elements for Networking.
+ */
 @Module
 public class NetworkModule {
 
+    @Singleton
     @Provides
-    @VusieApplicationScope
     public OkHttpClient okHttpClient() {
-        return new OkHttpClient.Builder().build();
+        return new OkHttpClient.Builder()
+                .connectTimeout(5, TimeUnit.SECONDS)
+                .build();
     }
 }

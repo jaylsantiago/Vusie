@@ -1,5 +1,12 @@
 package com.jorgesantiago.vusie.NewsAPI;
 
+/**
+ * Our Article JSON to POJO representation of the response we get from NewsAPI.
+ * <p>
+ * This class is almost identical to our {@link com.jorgesantiago.vusie.RoomDB.ArticleDatabaseEntity} but instead of making this
+ * one class the response POJO and the database entity (all we would have to do is add the Room annotations), it would be
+ * better to separate the concerns of these into two different classes, making the code more modular and robust
+ */
 public class ArticleApiResponse {
 
     private ArticleSourceApiResponse source;

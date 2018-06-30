@@ -1,62 +1,58 @@
 package com.jorgesantiago.vusie.RoomDB;
 
-import android.util.Log;
-
-import com.jorgesantiago.vusie.ArticleUtilities;
 import com.jorgesantiago.vusie.NewsAPI.ApiManager;
 import com.jorgesantiago.vusie.NewsAPI.ArticleApiResponse;
-import com.jorgesantiago.vusie.NewsAPI.ArticleSourceApiResponse;
+import com.jorgesantiago.vusie.Utilities.ArticleUtility;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
 import androidx.lifecycle.LiveData;
 import rx.Observable;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 import rx.subjects.BehaviorSubject;
 
 /**
- * This repository will manage query threads and serves as an abstraction layer between
+ * This repository will manage API requests and DB query threads and serves as an abstraction layer between
  * UI/ViewModel layers and the data persistence layers.
  */
+@Singleton
 public class ArticleRepository {
 
+    // Hot observable so using a Behavior Subject to remember the last emitted boolean just incase the repository finishes its refresh while no one is subscribed
     private static final BehaviorSubject<Boolean> refreshDone = BehaviorSubject.create(false);
+    private static boolean isRefreshInProgress = false;
     private static ApiManager newsApiManager;
     private static ArticleDao articleDao;
-    private static boolean intervalStarted = false;
-    private static boolean isRefreshInProgress = false;
 
     /**
-     * Creates an {@link ArticleRepository} instance and updates its {@link LiveData} lists of articles
+     * Creates an {@link ArticleRepository} instance and clears the database of any old articles
      */
     @Inject
-    public ArticleRepository(ArticleDao articleDao, ApiManager newsApiManager) {
+    public ArticleRepository(final ArticleDao articleDao, final ApiManager newsApiManager) {
         ArticleRepository.articleDao = articleDao;
         ArticleRepository.newsApiManager = newsApiManager;
         clearDatabase();
-        startApiFetchInterval();
     }
 
+    /**
+     * Emits an Observable of type Boolean to let any subscribers know that the repository refresh has been completed
+     *
+     * @return the observable to be subscribed to
+     */
     public static Observable<Boolean> notifyWhenRefreshIsComplete() {
         return refreshDone;
     }
 
-    private void startApiFetchInterval(){
-        // according to NewsAPI docs, their articles database updates every 15 minutes, so we check every 15 minutes to make sure we have all the latest news
-        Observable.interval(15, TimeUnit.MINUTES).subscribe(aLong -> {
-            Log.i("REPO", "15 MIN INTERVAL REACHED");
-            refreshRepository();
-        });
-    }
-
+    /**
+     * Method to tell the repository to make the network requests to fetch our news articles for us
+     */
     public void refreshRepository() {
-        // hit our endpoints whenever called to get the latest articles from the API
         isOkToFetch().flatMap(okToFetch -> {
             isRefreshInProgress = true;
+            // set off all our fetch observable chains, and merge them into one stream so we can insert the articles into our DB
             return Observable.merge(getTechNewsArticlesFromAPI(),
                     getBusinessNewsArticlesFromAPI(),
                     getScienceNewsArticlesFromAPI(),
@@ -68,8 +64,9 @@ public class ArticleRepository {
                 // for each
                 articleApiResponses -> {
                     for (ArticleApiResponse apiResponse : articleApiResponses) {
-                        // filter out articles without an image -- this is a media/image centered app
-                        if (ArticleUtilities.doesArticlePassSaveCriteria(apiResponse)) {
+                        // filter out low-quality articles (ex: no article image, articles not in english, etc.)
+                        if (ArticleUtility.doesArticlePassSaveCriteria(apiResponse)) {
+                            // map our api response object to our article database entity representation so we can save to DB
                             insert(ArticleDatabaseEntity.convertApiResponseToDbEntity(apiResponse));
                         }
                     }
@@ -86,25 +83,8 @@ public class ArticleRepository {
         );
     }
 
-    private Observable<Boolean> isOkToFetch() {
-        return Observable.just(isRefreshInProgress).filter(isRefreshInProgress -> !isRefreshInProgress);
-    }
-
     /**
-     * Gets the locally cached list of top news articles
-     *
-     * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
-     */
-    public LiveData<List<ArticleDatabaseEntity>> getAllNewsArticles() {
-        return articleDao.getAllNewsArticles();
-    }
-
-    private Observable<List<ArticleSourceApiResponse>> getSourcesFromAPI() {
-        return newsApiManager.sources();
-    }
-
-    /**
-     * Gets the locally cached list of tech news articles
+     * Gets the locally stored list of tech news articles
      *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
@@ -112,12 +92,8 @@ public class ArticleRepository {
         return articleDao.getAllTechNewsArticles();
     }
 
-    private Observable<List<ArticleApiResponse>> getTechNewsArticlesFromAPI() {
-        return newsApiManager.topHeadlinesFromTechnology();
-    }
-
     /**
-     * Gets the locally cached list of business news articles
+     * Gets the locally stored list of business news articles
      *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
@@ -125,12 +101,8 @@ public class ArticleRepository {
         return articleDao.getAllBusinessNewsArticles();
     }
 
-    private Observable<List<ArticleApiResponse>> getBusinessNewsArticlesFromAPI() {
-        return newsApiManager.topHeadlinesFromBusiness();
-    }
-
     /**
-     * Gets the locally cached list of science news articles
+     * Gets the locally stored list of science news articles
      *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
@@ -138,12 +110,8 @@ public class ArticleRepository {
         return articleDao.getAllScienceNewsArticles();
     }
 
-    private Observable<List<ArticleApiResponse>> getScienceNewsArticlesFromAPI() {
-        return newsApiManager.topHeadlinesFromScience();
-    }
-
     /**
-     * Gets the locally cached list of sports news articles
+     * Gets the locally stored list of sports news articles
      *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
@@ -151,12 +119,8 @@ public class ArticleRepository {
         return articleDao.getAllSportsNewsArticles();
     }
 
-    private Observable<List<ArticleApiResponse>> getSportsNewsArticlesFromAPI() {
-        return newsApiManager.topHeadlinesFromSports();
-    }
-
     /**
-     * Gets the locally cached list of entertainment news articles
+     * Gets the locally stored list of entertainment news articles
      *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
@@ -164,52 +128,83 @@ public class ArticleRepository {
         return articleDao.getAllEntertainmentNewsArticles();
     }
 
-    private Observable<List<ArticleApiResponse>> getEntertainmentNewsArticlesFromAPI() {
-        return newsApiManager.topHeadlinesFromEntertainment();
-    }
-
+    /**
+     * Gets the locally stored list of general news articles
+     *
+     * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
+     */
     public LiveData<List<ArticleDatabaseEntity>> getGeneralNewsArticlesFromDB() {
         return articleDao.getAllGeneralNewsArticles();
     }
 
-    private Observable<List<ArticleApiResponse>> getGeneralNewsArticlesFromAPI() {
-        return newsApiManager.topHeadlinesFromGeneral();
-    }
-
+    /**
+     * Gets the locally stored list of health news articles
+     *
+     * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
+     */
     public LiveData<List<ArticleDatabaseEntity>> getHealthNewsArticlesFromDB() {
         return articleDao.getAllHealthNewsArticles();
     }
 
+    // ping our API tech news endpoint
+    private Observable<List<ArticleApiResponse>> getTechNewsArticlesFromAPI() {
+        return newsApiManager.topHeadlinesFromTechnology();
+    }
+
+    // ping our API business news endpoint
+    private Observable<List<ArticleApiResponse>> getBusinessNewsArticlesFromAPI() {
+        return newsApiManager.topHeadlinesFromBusiness();
+    }
+
+    // ping our API science news endpoint
+    private Observable<List<ArticleApiResponse>> getScienceNewsArticlesFromAPI() {
+        return newsApiManager.topHeadlinesFromScience();
+    }
+
+    // ping our API sports news endpoint
+    private Observable<List<ArticleApiResponse>> getSportsNewsArticlesFromAPI() {
+        return newsApiManager.topHeadlinesFromSports();
+    }
+
+    // ping our API entertainment news endpoint
+    private Observable<List<ArticleApiResponse>> getEntertainmentNewsArticlesFromAPI() {
+        return newsApiManager.topHeadlinesFromEntertainment();
+    }
+
+    // ping our API tech general endpoint
+    private Observable<List<ArticleApiResponse>> getGeneralNewsArticlesFromAPI() {
+        return newsApiManager.topHeadlinesFromGeneral();
+    }
+
+    // ping our API tech health endpoint
     private Observable<List<ArticleApiResponse>> getHealthNewsArticlesFromAPI() {
         return newsApiManager.topHeadlinesFromHealth();
     }
 
-    /**
-     * Deletes all articles currently in the database. This method only gets called when a full article update is about to take place, ensuring the database contains only the most up to date articles.
-     */
+    // make sure there isnt a refresh in progress before starting another one
+    private Observable<Boolean> isOkToFetch() {
+        return Observable.just(isRefreshInProgress).filter(isRefreshInProgress -> !isRefreshInProgress);
+    }
+
+    //Deletes all articles currently in the database
     private void clearDatabase() {
         // Room database transactions must be done off the UI thread or an exception is thrown
-        Observable.just("Just make an observable out of nothing")
+        Observable.just("Just make an observable out of nothing") // Observable.empty() doesnt work here...
                 .subscribeOn(Schedulers.io())
                 .map(imAnObservable -> {
-                    Log.i("REPO", "CLEARING DATABASE");
                     articleDao.deleteAllArticle();
                     return imAnObservable;
                 })
+                .doOnError(Throwable::printStackTrace)
                 .subscribe();
     }
 
-    /**
-     * Inserts an article into the database.
-     *
-     * @param article to be saved into the database.
-     */
-    private void insert(ArticleDatabaseEntity article) {
+    // Inserts an article into the database.
+    private void insert(final ArticleDatabaseEntity article) {
         // Room database transactions must be done off the UI thread or an exception is thrown
         Observable.just(article)
                 .subscribeOn(Schedulers.io())
                 .map(articleDatabaseEntity -> {
-                    Log.i("REPO", "INSERTING INTO DATABASE");
                     articleDao.insert(articleDatabaseEntity);
                     return articleDatabaseEntity;
                 })

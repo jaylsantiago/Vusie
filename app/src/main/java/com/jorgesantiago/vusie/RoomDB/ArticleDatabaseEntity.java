@@ -7,13 +7,21 @@ import androidx.room.Entity;
 import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
+/**
+ * Our Article database entity object. We map our {@link ArticleApiResponse} into an {@link ArticleDatabaseEntity}
+ * to store in our Room database.
+ * <p>
+ * This class is almost identical to our {@link ArticleApiResponse} but instead of making this
+ * one class the response POJO and the database entity, it would be better to separate the concerns
+ * of these into two different classes, making the code more modular and robust.
+ */
 @Entity(tableName = "article_table", indices = {@Index(value = "url", unique = true)})
 public class ArticleDatabaseEntity {
 
     @PrimaryKey(autoGenerate = true)
     private int articleID;
 
-    // The identifier id and a display name for the source this article came from.
+    // The source this article came from.
     @ColumnInfo
     private String source;
 
@@ -29,7 +37,8 @@ public class ArticleDatabaseEntity {
     @ColumnInfo
     private String description;
 
-    //The direct URL to the article.
+    //The direct URL to the article. We use this as a unique index because no two articles should have the same exact url.
+    // (sometimes one article will be included in responses from multiple endpoints)
     @ColumnInfo
     private String url;
 
@@ -41,6 +50,7 @@ public class ArticleDatabaseEntity {
     @ColumnInfo
     private String publishedAt;
 
+    //The article category, stored as an int by the NewsCategory ordinal value
     @ColumnInfo
     private int articleCategory;
 
@@ -52,7 +62,7 @@ public class ArticleDatabaseEntity {
      *
      * @param apiResponse the article to be converted
      */
-    public static ArticleDatabaseEntity convertApiResponseToDbEntity(ArticleApiResponse apiResponse) {
+    public static ArticleDatabaseEntity convertApiResponseToDbEntity(final ArticleApiResponse apiResponse) {
         ArticleDatabaseEntity articleDatabaseEntity = new ArticleDatabaseEntity();
         articleDatabaseEntity.setAuthor(apiResponse.getAuthor());
         articleDatabaseEntity.setDescription(apiResponse.getDescription());
@@ -135,21 +145,5 @@ public class ArticleDatabaseEntity {
 
     public void setSource(String source) {
         this.source = source;
-    }
-
-    /**
-     * Helper method to get us the domain URL of the source so we can feed it into the Clearbit Logo API
-     *
-     * @return URL of the source
-     */
-    public String getSourceLogoUrl() {
-        //Basically this method gets us the base domain URL of the source from the article URL
-        // the 3rd '/' is what we want the position of --> https://www.yoursource.com/
-        int pos = url.indexOf("/");
-        int n = 3;
-        while (--n > 0 && pos != -1) {
-            pos = url.indexOf("/", pos + 1);
-        }
-        return url.substring(0, pos);
     }
 }

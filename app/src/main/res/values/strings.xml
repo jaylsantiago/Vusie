@@ -9,4 +9,7 @@
     <string name="news_category_general">General</string>
     <string name="news_category_health">Health</string>
     <string name="description_unavailable">No description available…  \nSeriously? How hard is it to write a description?  \nUnbelieveable.</string>
+    <string name="no_network_dialog_message">You currently are not connected to the Internet. Vusie is a media-centric app that needs Internet to fetch and display the latest news articles for you. Please check your network/Wi-Fi settings and then press OK to try again.</string>
+    <string name="no_network_dialog_title">No Network!</string>
+    <string name="ok">ok</string>
 </resources>

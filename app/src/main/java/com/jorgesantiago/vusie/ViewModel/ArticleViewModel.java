@@ -1,41 +1,31 @@
 package com.jorgesantiago.vusie.ViewModel;
 
-import androidx.lifecycle.LiveData;
-import androidx.annotation.NonNull;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
-
 import com.jorgesantiago.vusie.RoomDB.ArticleDatabaseEntity;
 import com.jorgesantiago.vusie.RoomDB.ArticleRepository;
 
 import java.util.List;
 
-import javax.inject.Inject;
+import androidx.annotation.NonNull;
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProvider;
 
 /**
  * This ArticleViewModel serves as an abstraction layer between the UI and any of the backend logic.
- * It does not expose to the UI any implementation regarding the database, or the repository.
+ * It does not expose to the UI any implementation regarding the database, or the repository. It simply
+ * provides the View with data to display.
  */
 public class ArticleViewModel extends ViewModel {
 
     // cache of our news articles
     private final LiveData<List<ArticleDatabaseEntity>> techNewsArticles;
+    private final LiveData<List<ArticleDatabaseEntity>> businessNewsArticles;
+    private final LiveData<List<ArticleDatabaseEntity>> scienceNewsArticles;
+    private final LiveData<List<ArticleDatabaseEntity>> sportsNewsArticles;
+    private final LiveData<List<ArticleDatabaseEntity>> entertainmentNewsArticles;
+    private final LiveData<List<ArticleDatabaseEntity>> generalNewsArticles;
+    private final LiveData<List<ArticleDatabaseEntity>> healthNewsArticles;
 
-    private LiveData<List<ArticleDatabaseEntity>> businessNewsArticles;
-
-    private LiveData<List<ArticleDatabaseEntity>> scienceNewsArticles;
-
-    private LiveData<List<ArticleDatabaseEntity>> sportsNewsArticles;
-
-    private LiveData<List<ArticleDatabaseEntity>> entertainmentNewsArticles;
-
-    private LiveData<List<ArticleDatabaseEntity>> generalNewsArticles;
-
-    private LiveData<List<ArticleDatabaseEntity>> healthNewsArticles;
-
-    private LiveData<List<ArticleDatabaseEntity>> allNewsArticles;
-
-    @Inject
     public ArticleViewModel(ArticleRepository articleRepository) {
         techNewsArticles = articleRepository.getTechNewsArticlesFromDB();
         businessNewsArticles = articleRepository.getBusinessNewsArticlesFromDB();
@@ -44,15 +34,11 @@ public class ArticleViewModel extends ViewModel {
         entertainmentNewsArticles = articleRepository.getEntertainmentNewsArticlesFromDB();
         generalNewsArticles = articleRepository.getGeneralNewsArticlesFromDB();
         healthNewsArticles = articleRepository.getHealthNewsArticlesFromDB();
-        allNewsArticles = articleRepository.getAllNewsArticles();
-    }
-
-    public LiveData<List<ArticleDatabaseEntity>> getAllNewsArticles() {
-        return allNewsArticles;
     }
 
     /**
      * Gets the locally cached list of tech news articles
+     *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
     public LiveData<List<ArticleDatabaseEntity>> getTechNewsArticles() {
@@ -62,6 +48,7 @@ public class ArticleViewModel extends ViewModel {
 
     /**
      * Gets the locally cached list of business news articles
+     *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
     public LiveData<List<ArticleDatabaseEntity>> getBusinessNewsArticles() {
@@ -71,6 +58,7 @@ public class ArticleViewModel extends ViewModel {
 
     /**
      * Gets the locally cached list of science news articles
+     *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
     public LiveData<List<ArticleDatabaseEntity>> getScienceNewsArticles() {
@@ -80,6 +68,7 @@ public class ArticleViewModel extends ViewModel {
 
     /**
      * Gets the locally cached list of sports news articles
+     *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
     public LiveData<List<ArticleDatabaseEntity>> getSportsNewsArticles() {
@@ -89,6 +78,7 @@ public class ArticleViewModel extends ViewModel {
 
     /**
      * Gets the locally cached list of entertainment news articles
+     *
      * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
      */
     public LiveData<List<ArticleDatabaseEntity>> getEntertainmentNewsArticles() {
@@ -96,19 +86,33 @@ public class ArticleViewModel extends ViewModel {
         return entertainmentNewsArticles;
     }
 
+    /**
+     * Gets the locally cached list of general news articles
+     *
+     * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
+     */
     public LiveData<List<ArticleDatabaseEntity>> getGeneralNewsArticles() {
+        // hiding implementation so the UI doesnt directly interact with the repository
         return generalNewsArticles;
     }
 
+    /**
+     * Gets the locally cached list of health news articles
+     *
+     * @return {@link LiveData} list of articles that can be observed on the UI thread to automatically notify observers when database has been updated
+     */
     public LiveData<List<ArticleDatabaseEntity>> getHealthNewsArticles() {
+        // hiding implementation so the UI doesnt directly interact with the repository
         return healthNewsArticles;
     }
 
-    public static class ArticleViewModelFactory implements ViewModelProvider.Factory{
+    /**
+     * Factory to tell the ViewModelProvider how to build our ViewModel for us
+     */
+    public static class ArticleViewModelFactory implements ViewModelProvider.Factory {
 
         private ArticleViewModel articleViewModel;
 
-        @Inject
         public ArticleViewModelFactory(ArticleViewModel viewModel) {
             this.articleViewModel = viewModel;
         }

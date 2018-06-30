@@ -1,5 +1,8 @@
 package com.jorgesantiago.vusie.NewsAPI;
 
+/**
+ * Our Article Source JSON to POJO representation of the response we get from NewsAPI
+ */
 public class ArticleSourceApiResponse {
 
     private final String id;
