@@ -6,14 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".UI.SplashScreenActivity">
+    tools:context=".ui.SplashScreenActivity">
 
     <ImageView
         android:id="@+id/loadingBlue"
         android:layout_width="50dp"
         android:layout_height="0dp"
         android:layout_marginStart="-55dp"
-        android:layout_marginEnd="-55dp"
         android:layout_weight="1"
         app:srcCompat="@drawable/loading_blue" />
 
@@ -31,7 +30,6 @@
         android:layout_width="50dp"
         android:layout_height="0dp"
         android:layout_marginStart="-55dp"
-        android:layout_marginEnd="-55dp"
         android:layout_weight="1"
         app:srcCompat="@drawable/loading_teal" />
 
@@ -44,7 +42,7 @@
         android:text="v u s i e"
         android:textAllCaps="true"
         android:textColor="@android:color/black"
-        android:textSize="78sp" />
+        android:textSize="64sp" />
 
     <ImageView
         android:id="@+id/loadingPink"

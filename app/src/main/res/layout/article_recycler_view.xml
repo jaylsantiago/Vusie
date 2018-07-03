@@ -4,4 +4,4 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:defaultItemHeight="150dp"
-    app:featuredItemHeight="455dp" />
+    app:featuredItemHeight="425dp" />

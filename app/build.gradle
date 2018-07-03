@@ -20,6 +20,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
 }
 
 dependencies {
@@ -37,7 +42,6 @@ dependencies {
     implementation 'io.reactivex:rxandroid:1.1.0'
     // Room components
     implementation 'androidx.room:room-runtime:2.0.0-alpha1'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.0'
     annotationProcessor "androidx.room:room-compiler:2.0.0-alpha1"
     androidTestImplementation 'androidx.room:room-testing:2.0.0-alpha1'
     // Lifecycle components
@@ -54,14 +58,12 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.1.0-alpha3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0-alpha3'
 
+    testImplementation "org.robolectric:robolectric:3.8"
+
     // dagger core
     implementation 'com.google.dagger:dagger:2.16'
     annotationProcessor 'com.google.dagger:dagger-compiler:2.16'
-
+    // dagger android
     implementation 'com.google.dagger:dagger-android-support:2.16'
     annotationProcessor 'com.google.dagger:dagger-android-processor:2.16'
-
-    implementation 'joda-time:joda-time:2.10'
-
-    implementation 'com.romandanylyk:pageindicatorview:1.0.1'
 }
